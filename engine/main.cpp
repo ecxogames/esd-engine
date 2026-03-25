@@ -232,8 +232,14 @@ int main() {
     // Optional: Load Splash Screen Config
     std::string splashConfigPath = cwd + "/ui/splash/properties.config";
     std::ifstream splashFile(splashConfigPath);
-    bool useSplash = splashFile.good();
-    
+
+    bool userWantsSplash = true;
+    if (rootConfig.count("SPLASH_SCREEN") && rootConfig.at("SPLASH_SCREEN") == "false") {
+        userWantsSplash = false;
+    }
+
+    bool useSplash = splashFile.good() && userWantsSplash;
+
     if (useSplash) {
         auto splashConfig = LoadConfig(splashConfigPath);
         ApplyWindowProperties(w, hwnd, splashConfig, dragBackground);

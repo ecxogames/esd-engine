@@ -21,7 +21,7 @@ The core of the engine is an Inter-Process Communication (IPC) bridge that route
 
 * `/engine/` - Core C++ runtime code (Entry point, window creation, webview integration).
 * `/server/` - Python backend logic. Treated as private during compilation.
-* `/ui/` - User interface code (HTML/CSS/JS entry points and components).
+* `/ui/` - User interface code (HTML/CSS/JS entry points).
 * `/public/` - Shared assets accessible by all layers.
 * `/private/` - Restricted code (C++, JS, Python) accessible only via secure imports.
 * `/scripts/` - Utility scripts for development and building.

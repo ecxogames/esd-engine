@@ -51,8 +51,12 @@ def build_standalone():
         shutil.rmtree(dist_dir)
     os.makedirs(dist_dir)
 
+    props = parse_properties_config()
+    app_title = props.get("TITLE", "ESDEngine")
+    safe_exe_name = "".join(c for c in app_title if c.isalnum() or c in " _-") + ".exe"
+
     print("\n -> Copying executable...")
-    shutil.copy(exe, dist_dir)
+    shutil.copy(exe, os.path.join(dist_dir, safe_exe_name))
     
     print(" -> Copying UI and Server assets...")
     shutil.copytree("ui", os.path.join(dist_dir, "ui"))
@@ -117,10 +121,33 @@ def install_inno_setup_if_needed():
             print(f"\n[Error] Failed to install Inno Setup via winget: {e}")
     return False
 
+def parse_properties_config():
+    props = {
+        "TITLE": "ESD Suite Application",
+        "VERSION": "1.0.0",
+        "AUTHOR": "Ecxo Softwares"
+    }
+    config_path = "properties.config"
+    if os.path.exists(config_path):
+        with open(config_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and "=" in line and not line.startswith("#"):
+                    key, val = line.split("=", 1)
+                    props[key.strip()] = val.strip()
+    return props
+
 def build_installer():
     print_header("INSTALLER BUILD")
     print("Preparing an installation package setup...")
     print("This will create a Standalone build and generate a setup installer script.")
+    
+    props = parse_properties_config()
+    app_title = props.get("TITLE", "ESD Suite Application")
+    app_version = props.get("VERSION", "1.0.0")
+    app_publisher = props.get("AUTHOR", "Ecxo Softwares")
+    safe_name = "".join(c for c in app_title if c.isalnum())
+    safe_exe_name = "".join(c for c in app_title if c.isalnum() or c in " _-") + ".exe"
     
     dist_dir = os.path.join("dist", "Standalone")
     if not os.path.exists(dist_dir) or not os.path.exists(os.path.join(dist_dir, "python3.dll")):
@@ -140,12 +167,13 @@ def build_installer():
 
     iss_content = f"""
 [Setup]
-AppName=ESD Suite Application
-AppVersion=1.0.0
-DefaultDirName={{autopf}}\\ESDSuiteApp
-DefaultGroupName=ESD Suite
+AppName={app_title}
+AppVersion={app_version}
+AppPublisher={app_publisher}
+DefaultDirName={{autopf}}\\{safe_name}
+DefaultGroupName={app_title}
 OutputDir=dist
-OutputBaseFilename=ESDSuite_Installer
+OutputBaseFilename={safe_name}_Installer
 Compression=lzma
 SolidCompression=yes
 ArchitecturesAllowed=x64
@@ -155,8 +183,8 @@ ArchitecturesInstallIn64BitMode=x64
 Source: "{os.path.abspath(dist_dir)}\\*"; DestDir: "{{app}}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{{group}}\\ESD Suite App"; Filename: "{{app}}\\ESDEngine.exe"
-Name: "{{autodesktop}}\\ESD Suite App"; Filename: "{{app}}\\ESDEngine.exe"; Tasks: desktopicon
+Name: "{{group}}\\{app_title}"; Filename: "{{app}}\\{safe_exe_name}"
+Name: "{{autodesktop}}\\{app_title}"; Filename: "{{app}}\\{safe_exe_name}"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
